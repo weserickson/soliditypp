@@ -1,0 +1,107 @@
+//
+// GuessToWin.solpp
+//
+// Simple allowing anyone to guess a secret password. If they guess it right, they
+// are awarded a small amount of Vite.
+//
+// Commented excessively for educational purposes.
+//
+pragma soliditypp ^0.4.2;
+
+contract GuessToWin {
+
+   // The hash of our secret password "hello", generated via command
+   // echo -n hello | b2sum -l 256
+   bytes public hashval = hex"324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf";
+
+   // Use Vite as token for funding and rewards.
+   tokenId token = tokenId("tti_5649544520544f4b454e6e40");
+
+   // Amount of Vite in attov (one attov is 10^-18 Vite).
+   uint256 rewardAmount = 10;
+
+   // Define an "event", which is essentially struct definition for a publically
+   // accessible log entry. Events are useful since they can be triggered on or searched for,
+   // by using various tools in Vite.js or directly interfacing with a gvite node,
+   // as well as a convinient tool for debugging. The "indexed" keyword simply means that a hash
+   // of that argument is hashed and can be quickly searched for or triggered upon.
+   // All events are triggered by using the "emit" keyword, which we'll see later.
+   event Funded(address indexed addr, uint256 amount, string log);
+
+   // Define our first callable function. onMessage functions have access to msg which
+   // contains information on the function call, like msg.sender, msg.amount, msg.data, etc.
+   // The keyword payable means that a caller is allowed to send tokens to the address. If 
+   // the payable keyword is NOT used, any calls with more than 0 tokens sent will be rejected.
+   // In this case, all this function does is implicitally accept payments and log it.
+   onMessage Fund() payable {
+      emit Funded(msg.sender, msg.amount, "THANKS FOR FUNDING!");
+   }
+
+   // Now we define a second event. Note that this event has a different "topic"
+   // generated in the log. This is because the topic is created by a hash of the
+   // function call signature. That is, for the following Guessed event the call
+   // signature is:
+   //
+   // Guessed(address,uint256,string)
+   //
+   // For which the hash can be computed via 
+   // echo -n "Guessed(address,uint256,string)" | b2sum -l 256
+   // 147d1d571f6f17f3e69c939380d1636ccace5886ff5c924e9f4f3418ee39439b
+   //
+   event Guessed(address indexed addr, uint256 amount, string log);
+   
+   // Aside / Bug report:
+   // Something weird happens if you only have an event that accepts a single string.
+   // The issue is that the event emission does not appear to return any arguments to
+   // the log. Here's a minimal example:
+   //
+   // event BreakThings(string log);
+   // onMessage BadFunc() {
+   //     emit BreakThings("This string wont show up in the log, which seems like a bug!");
+   // }
+   //
+
+   // Now we define our second callable function. In this case we make it a
+   // non-payable function, because we don't want people to accidentally
+   // send the contract funds.
+   // Notice that this time our function has an argument, which automatically adds
+   // a data entry field on the smart contract interface.
+   onMessage Guess(string calldata body) {
+
+      // balance allows us to check the smart contracts balance of a given token
+      if ( balance(token) >= rewardAmount ) {
+
+         // Here we check if the stored hash matches the hash of the submitted password.
+         // 
+         // A few comments:
+         // - To use the hash function, we need to encode strings via abi.encodePacked which
+         //   encodes without adding any additional padding. 
+         // - an easy way to compare equality of strings and byte arrays is by comparing equality
+         //   of their respective hashes. This is why we
+         // 
+         if( blake2b(abi.encodePacked(blake2b(abi.encodePacked(body)))) == blake2b(abi.encodePacked(hashval)) ) {
+
+            // Finally, we transfer a reward to our correct guesser.
+            msg.sender.transfer(token, rewardAmount);
+
+            // And give them a congratualatory message.
+            emit Guessed(msg.sender, rewardAmount, "YOU WIN!"); 
+
+         } else {
+
+            // Or let them know if they failed.
+            emit Guessed(msg.sender, 0, "WRONG ANSWER, TRY AGAIN.");
+
+         }
+
+      } else {
+
+         // Or don't even let them guess if they couldn't win anyway.
+         // Note that we could have defined a different Event for each
+         // of these outcomes, which may be preffered depending on the
+         // application.
+         emit Guessed(msg.sender, 0, "OUT OF FUNDS!");
+
+      }
+   }
+}
