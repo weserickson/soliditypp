@@ -1,7 +1,7 @@
 //
 // GuessToWin.solpp
 //
-// Simple allowing anyone to guess a secret password. If they guess it right, they
+// Simple contract allowing anyone to guess a secret password. If they guess it right, they
 // are awarded a small amount of Vite.
 //
 // Commented excessively for educational purposes.
@@ -12,6 +12,7 @@ contract GuessToWin {
 
    // The hash of our secret password "hello", generated via command
    // echo -n hello | b2sum -l 256
+   // We store this as a byte array, note the hex prefix.
    bytes public hashval = hex"324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf";
 
    // Use Vite as token for funding and rewards.
@@ -20,11 +21,11 @@ contract GuessToWin {
    // Amount of Vite in attov (one attov is 10^-18 Vite).
    uint256 rewardAmount = 10;
 
-   // Define an "event", which is essentially struct definition for a publically
-   // accessible log entry. Events are useful since they can be triggered on or searched for,
-   // by using various tools in Vite.js or directly interfacing with a gvite node,
+   // Define an "event", which is essentially a data structure for a log entry.
+   // Emitted events are stored in the ledger and are useful since they can be triggered on or
+   // searched for by using various tools in Vite.js or by directly interfacing with a gvite node,
    // as well as a convinient tool for debugging. The "indexed" keyword simply means that a hash
-   // of that argument is hashed and can be quickly searched for or triggered upon.
+   // of that argument is stored in the ledger and can be quickly searched for or triggered upon.
    // All events are triggered by using the "emit" keyword, which we'll see later.
    event Funded(address indexed addr, uint256 amount, string log);
 
@@ -38,9 +39,8 @@ contract GuessToWin {
    }
 
    // Now we define a second event. Note that this event has a different "topic"
-   // generated in the log. This is because the topic is created by a hash of the
-   // function call signature. That is, for the following Guessed event the call
-   // signature is:
+   // generated in the log when it is emitted. This is because the topic is a hash of the
+   // function call signature. That is, for the following Guessed event the call signature is:
    //
    // Guessed(address,uint256,string)
    //
@@ -65,18 +65,20 @@ contract GuessToWin {
    // non-payable function, because we don't want people to accidentally
    // send the contract funds.
    // Notice that this time our function has an argument, which automatically adds
-   // a data entry field on the smart contract interface.
+   // an appropriate data entry field on the smart contract interface.
+   // They keyword "calldata" refers to the data storage location. The storage location
+   // of variables is important, will want to read more about this.
    onMessage Guess(string calldata body) {
 
-      // balance allows us to check the smart contracts balance of a given token
+      // balance allows us to check the smart contract's balance of a given token.
       if ( balance(token) >= rewardAmount ) {
 
          // Here we check if the stored hash matches the hash of the submitted password.
          // 
          // A few comments:
-         // - To use the hash function, we need to encode strings via abi.encodePacked which
+         // - To use the hash function blake2b, we need to encode strings via abi.encodePacked which
          //   encodes without adding any additional padding. 
-         // - an easy way to compare equality of strings and byte arrays is by comparing equality
+         // - An easy way to compare equality of strings and byte arrays is by comparing equality
          //   of their respective hashes. This is why we
          // 
          if( blake2b(abi.encodePacked(blake2b(abi.encodePacked(body)))) == blake2b(abi.encodePacked(hashval)) ) {
