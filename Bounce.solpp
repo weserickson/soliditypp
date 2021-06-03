@@ -1,0 +1,45 @@
+pragma soliditypp ^0.4.3;
+
+contract BouncerA {
+    uint i;
+    message passB(uint);
+
+    onMessage firstpass(address a) {
+        i=1;
+        send(a,passB(1));
+    }
+
+    onMessage passA(uint x) {
+        i = x;
+        address sender = msg.sender;
+        if(i<100){
+            send(sender,passB(i+1));
+        }
+    }
+
+    getter get() returns(uint) {
+        return i;
+    }
+}
+
+contract BouncerB {
+    uint i;
+    message passA(uint);
+
+    onMessage firstpass(address a) {
+        i=1;
+        send(a,passA(1));
+    }
+
+    onMessage passB(uint x) {
+        i = x;
+        address sender = msg.sender;
+        if(i<100){
+            send(sender,passA(i+1));
+        }
+    }
+
+    getter get() returns(uint) {
+        return i;
+    }
+}

@@ -1,0 +1,33 @@
+pragma soliditypp ^0.4.3;
+
+contract A {
+    message sum(address orig, uint result);
+    event Log(address indexed addr, string data);
+
+    onMessage add(address orig, uint a, uint b) {
+        uint result = a + b;
+        address sender = msg.sender;
+        send(sender, sum(orig, result));
+        emit Log(orig, "A.add(a,b) called");
+   }
+}
+
+contract B {
+    uint total;
+    message add(address orig, uint a, uint b);
+    event Log(address indexed addr, string data);
+
+    onMessage invoker(address addr, uint a, uint b) {
+        send(addr, add(msg.sender, a, b));
+        emit Log(msg.sender, "B.invoker(addr,a,b) called");
+
+    }
+
+    onMessage sum(address orig, uint result) {
+        emit Log(orig, "B.sum(result) called");
+
+        if (result > 10) {
+           total += result;
+       }
+    }
+}

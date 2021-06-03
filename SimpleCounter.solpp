@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: MIT
+pragma soliditypp ^0.4.2;
+
+contract Counter {
+    uint public count;
+
+    // Function to increment count by 1
+    onMessage inc() {
+        count += 1;
+    }
+
+    // Function to decrement count by 1
+    onMessage dec() {
+        count -= 1;
+    }
+
+    // // Function to get the current count
+    getter get() returns(uint) {
+        return count;
+    }
+
+}

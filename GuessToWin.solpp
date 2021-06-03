@@ -16,6 +16,7 @@ contract GuessToWin {
    bytes public hashval = hex"324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf";
 
    // Use Vite as token for funding and rewards.
+   // https://vitescan.io/tokens
    tokenId token = tokenId("tti_5649544520544f4b454e6e40");
 
    // Amount of Vite in attov (one attov is 10^-18 Vite).
@@ -28,6 +29,12 @@ contract GuessToWin {
    // of that argument is stored in the ledger and can be quickly searched for or triggered upon.
    // All events are triggered by using the "emit" keyword, which we'll see later.
    event Funded(address indexed addr, uint256 amount, string log);
+
+   // Define our constructor. This is optional as a default constructor is provided if not
+   // declared. However, we add the "payable" keyword which allows funds to be sent while
+   // deploying the contract.
+    constructor() public payable {
+    }
 
    // Define our first callable function. onMessage functions have access to msg which
    // contains information on the function call, like msg.sender, msg.amount, msg.data, etc.

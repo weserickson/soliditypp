@@ -1,0 +1,13 @@
+pragma soliditypp ^0.4.2;
+contract bet {
+    event win();
+    event lose();
+    onMessage guess(uint8 target) {
+        uint64 random = random64();
+        if (target == random % 10) {
+            emit win();
+        } else {
+            emit lose();
+        }
+    }
+}
