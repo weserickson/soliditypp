@@ -1,0 +1,32 @@
+pragma soliditypp ^0.4.3;
+
+contract SelfBounce {
+    uint i;
+    message pass(uint);
+
+    onMessage firstpass(address a) {
+        i=1;
+        send(a,pass(1));
+    }
+
+    function toUint(bytes memory data, uint index) internal returns (uint) {
+        uint val;
+        for (uint i = index; i < index + 32; i++)  {
+            val *= 256;
+            if (i < data.length)
+                val |= uint8(data[i]);
+        }
+        return val;
+    }
+
+    // define a generic message handler
+    onMessage(){
+        // first 4 bytes are hash of call sig, ignore.
+        i = toUint(msg.data, 4)+1; 
+        send(msg.sender,pass(i));
+    }
+
+    getter get() returns(uint) {
+        return i;
+    }
+}
