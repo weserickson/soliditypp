@@ -1,0 +1,46 @@
+
+pragma soliditypp ^0.4.3;
+
+contract A {
+    uint data;
+
+    onMessage set(uint x) {
+        data = x;
+    }
+
+    message setB(uint);
+
+    onMessage copyToRemote(address addr) {
+        send(addr, setB(data));
+    }
+}
+
+contract B {
+    uint data;
+
+    // extracts a uint from array
+    function toUint(bytes memory data, uint index) internal returns (uint) {
+        uint val;
+        for (uint i = index; i < index + 32; i++)  {
+            val *= 256;
+            if (i < data.length)
+                val |= uint8(data[i]);
+        }
+        return val;
+    }
+
+    // define a generic message handler
+    onMessage(){
+        // first 4 bytes are hash of call sig, ignore.
+        data = toUint(msg.data, 4);
+    }
+
+    function set(uint x) public {
+        data = x;
+    }
+    
+    getter get() returns(uint) {
+        return data;
+    }
+
+}

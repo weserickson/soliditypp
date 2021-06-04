@@ -1,0 +1,35 @@
+pragma soliditypp ^0.4.3;
+
+contract ContractStorage {
+    uint storedData;
+
+    onMessage set(uint x) {
+        storedData = x;
+    }
+
+    message updateVar(uint);
+    onMessage requestVar() {
+        send(msg.sender, updateVar(storedData));
+    }
+}
+
+
+contract Accesser {
+    uint copyData;
+
+    message requestVar();
+    onMessage refreshData(address addr){
+        send(addr, requestVar());
+    }
+    
+    onMessage updateVar(uint x){
+        copyData = x;
+    }
+
+    
+    getter get() returns(uint) {
+        return copyData;
+    }
+
+
+}
