@@ -10,11 +10,8 @@ contract BouncerA {
     }
 
     onMessage passA(uint x) {
-        i = x;
-        address sender = msg.sender;
-        if(i<100){
-            send(sender,passB(i+1));
-        }
+        i = x+1;
+        send(msg.sender,passB(i));
     }
 
     getter get() returns(uint) {
@@ -32,11 +29,8 @@ contract BouncerB {
     }
 
     onMessage passB(uint x) {
-        i = x;
-        address sender = msg.sender;
-        if(i<100){
-            send(sender,passA(i+1));
-        }
+        i = x+1;
+        send(msg.sender,passA(i));
     }
 
     getter get() returns(uint) {
