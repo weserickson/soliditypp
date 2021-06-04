@@ -1,0 +1,22 @@
+// Doesn't compile, can't define pass as a message and a function
+
+pragma soliditypp ^0.4.3;
+
+contract SelfBounce {
+    uint i;
+    message pass(uint);
+
+    onMessage firstpass(address a) {
+        i=1;
+        send(a,pass(1));
+    }
+
+    onMessage pass(uint x) {
+        i = x+1;
+        send(msg.sender,pass(i));
+    }
+
+    getter get() returns(uint) {
+        return i;
+    }
+}
